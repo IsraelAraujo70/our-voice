@@ -69,3 +69,6 @@ Enhanced authentication system:
 * Implemented user session management
 * Updated API documentation
 ```
+
+Create the commit message and git commit the staged changes.
+The commit should not have co-authred by ....

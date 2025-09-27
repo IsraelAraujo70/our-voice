@@ -20,10 +20,13 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-  "pytest",
-  "pytest-django",
-  "model-bakery",
-  "ruff",
+  "pytest>=8.4",
+  "pytest-django>=4.11",
+  "pytest-cov>=7.0",
+  "factory-boy>=3.3",
+  "model-bakery>=1.20",
+  "ruff>=0.8",
+  "faker>=37.8",
 ]
 
 [tool.ruff]
@@ -33,3 +36,44 @@ line-length = 100
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
 python_files = ["tests.py", "test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+  "--cov=apps",
+  "--cov-report=term-missing",
+  "--cov-report=html",
+  "--cov-fail-under=80",
+  "--strict-markers",
+  "--disable-warnings",
+]
+markers = [
+  "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+  "integration: marks tests as integration tests",
+  "unit: marks tests as unit tests",
+]
+testpaths = ["apps", "tests"]
+
+[tool.coverage.run]
+source = ["apps"]
+omit = [
+  "*/migrations/*",
+  "*/tests/*",
+  "*/__init__.py",
+  "*/admin.py",
+  "*/apps.py",
+  "*/settings/*",
+]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+exclude_lines = [
+  "pragma: no cover",
+  "def __repr__",
+  "raise AssertionError",
+  "raise NotImplementedError",
+]
+
+[tool.coverage.html]
+directory = "htmlcov"

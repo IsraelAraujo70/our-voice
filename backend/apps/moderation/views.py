@@ -13,7 +13,11 @@ from apps.posts.models import Post
 from .models import ModerationDecision, Vote
 from .serializers import ModerationDecisionSerializer, VoteSerializer
 
-REMOVAL_THRESHOLD = Decimal(os.getenv("MODERATION_REMOVAL_THRESHOLD", "5.0"))
+def get_removal_threshold():
+    """Get the current removal threshold from environment or default."""
+    return Decimal(os.getenv("MODERATION_REMOVAL_THRESHOLD", "5.0"))
+
+REMOVAL_THRESHOLD = get_removal_threshold()
 
 
 class VoteViewSet(viewsets.ModelViewSet):
@@ -33,19 +37,29 @@ class VoteViewSet(viewsets.ModelViewSet):
         self._evaluate_post(vote.post)
 
     def _evaluate_post(self, post: Post):
-        total_weight = (
-            Vote.objects.filter(post=post, vote_type=Vote.Type.REMOVE, active=True)
-            .aggregate(total=Sum("weight"))
-            .get("total")
-            or Decimal("0")
-        )
-        if total_weight >= REMOVAL_THRESHOLD:
+        result = Vote.objects.filter(
+            post=post,
+            vote_type=Vote.Type.REMOVE,
+            active=True,
+            weight__gt=Decimal("0")
+        ).aggregate(total=Sum("weight"))
+
+        total_weight = result.get("total")
+        if total_weight is None:
+            total_weight = Decimal("0")
+        elif not isinstance(total_weight, Decimal):
+            total_weight = Decimal(str(total_weight))
+
+        # Get current threshold (allows for dynamic configuration)
+        current_threshold = get_removal_threshold()
+
+        if total_weight >= current_threshold:
             post.archive()
             ModerationDecision.objects.get_or_create(
                 post=post,
                 defaults={
                     "total_weight": total_weight,
-                    "threshold": REMOVAL_THRESHOLD,
+                    "threshold": current_threshold,
                     "archived": True,
                 },
             )

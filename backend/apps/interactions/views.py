@@ -12,7 +12,8 @@ class BaseOwnerViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
 
     def perform_create(self, serializer):
-        serializer.save(**{self.user_field: self.request.user})
+        # Serializers now handle user assignment in their create() method
+        serializer.save()
 
     def get_queryset(self):
         return self.queryset.filter(**{self.user_field: self.request.user})

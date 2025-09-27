@@ -23,21 +23,34 @@ class VoteSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         )
-        read_only_fields = ("id", "voter", "voter_handle", "weight", "created_at", "updated_at")
+        read_only_fields = ("id", "voter", "voter_handle", "created_at", "updated_at")
+
+    def validate(self, attrs):
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+
+        if user and user.is_authenticated:
+            post = attrs.get("post")
+            if Vote.objects.filter(post=post, voter=user).exists():
+                raise serializers.ValidationError("You have already voted on this post.")
+
+        return attrs
 
     def create(self, validated_data):
         request = self.context.get("request")
         user = getattr(request, "user", None)
         if user is None or not user.is_authenticated:
             raise serializers.ValidationError("Authentication is required to vote.")
-        vote, _ = Vote.objects.update_or_create(
+
+        # Use provided weight or default to 1.0
+        weight = validated_data.get("weight", Decimal("1.0"))
+
+        vote = Vote.objects.create(
             voter=user,
             post=validated_data["post"],
-            defaults={
-                "vote_type": validated_data["vote_type"],
-                "weight": Decimal("1.0"),
-                "active": True,
-            },
+            vote_type=validated_data["vote_type"],
+            weight=weight,
+            active=True,
         )
         return vote
 
