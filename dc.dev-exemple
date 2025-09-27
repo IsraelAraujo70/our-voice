@@ -1,0 +1,72 @@
+version: "3.9"
+
+services:
+  db:
+    environment:
+      POSTGRES_DB: our_voice
+      POSTGRES_USER: our_voice
+      POSTGRES_PASSWORD: our_voice
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  backend:
+    env_file:
+      - backend/.env
+    command: >-
+      sh -c "uv run python manage.py migrate && uv run python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./backend:/app
+      - backend_media:/app/media
+      - backend_static:/app/staticfiles
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+
+  celery:
+    image: our-voice-backend
+    command: uv run celery -A config worker -l info
+    env_file:
+      - backend/.env
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - db
+      - redis
+
+  celery-beat:
+    image: our-voice-backend
+    command: uv run celery -A config beat -l info
+    env_file:
+      - backend/.env
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - db
+      - redis
+
+  frontend:
+    env_file:
+      - frontend/.env.local
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8000/api
+    command: bun run dev -- --hostname 0.0.0.0 --port 3000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  backend_media:
+  backend_static:

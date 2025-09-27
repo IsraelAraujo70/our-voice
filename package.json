@@ -1,0 +1,13 @@
+{
+  "name": "our-voice",
+  "private": true,
+  "scripts": {
+    "backend:install": "cd backend && uv sync",
+    "backend:migrate": "cd backend && DJANGO_DB_ENGINE=django.db.backends.sqlite3 uv run python manage.py migrate",
+    "backend:check": "cd backend && DJANGO_DB_ENGINE=django.db.backends.sqlite3 uv run python manage.py check",
+    "frontend:install": "cd frontend && bun install",
+    "frontend:dev": "cd frontend && bun run dev",
+    "frontend:lint": "cd frontend && bun run lint",
+    "dev": "docker compose up --build"
+  }
+}

@@ -1,0 +1,35 @@
+[project]
+name = "our-voice-backend"
+version = "0.1.0"
+description = "Backend services for OUR Voice"
+requires-python = ">=3.10"
+dependencies = [
+  "Django>=5.2,<6.0",
+  "djangorestframework>=3.16",
+  "django-filter>=25.1",
+  "channels>=4.3",
+  "daphne>=4.2",
+  "channels-redis>=4.3",
+  "celery>=5.5",
+  "redis>=6.0",
+  "psycopg2-binary>=2.9",
+  "python-dotenv>=1.0",
+  "whitenoise>=6.6",
+  "Pillow>=11.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "pytest-django",
+  "model-bakery",
+  "ruff",
+]
+
+[tool.ruff]
+select = ["E", "F", "I", "UP", "DJANGO"]
+line-length = 100
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["tests.py", "test_*.py"]
