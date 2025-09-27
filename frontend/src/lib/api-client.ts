@@ -1,6 +1,6 @@
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
 
-function computeApiBaseOrigin(apiBaseUrl: string): string {
+export function computeApiBaseOrigin(apiBaseUrl: string): string {
   try {
     const url = new URL(apiBaseUrl);
     let pathname = url.pathname.replace(/\/+$/, "");

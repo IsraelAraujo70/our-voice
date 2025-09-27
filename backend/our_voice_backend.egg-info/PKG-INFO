@@ -1,0 +1,26 @@
+Metadata-Version: 2.4
+Name: our-voice-backend
+Version: 0.1.0
+Summary: Backend services for OUR Voice
+Requires-Python: >=3.10
+Requires-Dist: Django<6.0,>=5.2
+Requires-Dist: djangorestframework>=3.16
+Requires-Dist: django-filter>=25.1
+Requires-Dist: django-cors-headers>=4.3
+Requires-Dist: channels>=4.3
+Requires-Dist: daphne>=4.2
+Requires-Dist: channels-redis>=4.3
+Requires-Dist: celery>=5.5
+Requires-Dist: redis>=6.0
+Requires-Dist: psycopg2-binary>=2.9
+Requires-Dist: python-dotenv>=1.0
+Requires-Dist: whitenoise>=6.6
+Requires-Dist: Pillow>=11.0
+Provides-Extra: dev
+Requires-Dist: pytest>=8.4; extra == "dev"
+Requires-Dist: pytest-django>=4.11; extra == "dev"
+Requires-Dist: pytest-cov>=7.0; extra == "dev"
+Requires-Dist: factory-boy>=3.3; extra == "dev"
+Requires-Dist: model-bakery>=1.20; extra == "dev"
+Requires-Dist: ruff>=0.8; extra == "dev"
+Requires-Dist: faker>=37.8; extra == "dev"

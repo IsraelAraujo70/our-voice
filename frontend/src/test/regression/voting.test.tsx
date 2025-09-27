@@ -1,53 +1,12 @@
 /**
- * Regression tests for frontend voting functionality
+ * Regression tests for frontend voting functionality using real PostCard component
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { describe, it, expect, beforeEach } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
-
-// Mock components - these would be actual components in the real implementation
-const MockVoteButton = ({ postId, voteType, onVote }: {
-  postId: string
-  voteType: 'remove' | 'hide'
-  onVote: (postId: string, voteType: 'remove' | 'hide', weight: number) => Promise<void>
-}) => {
-  const handleClick = () => {
-    onVote(postId, voteType, 1.0)
-  }
-
-  return (
-    <button
-      onClick={handleClick}
-      data-testid={`vote-${voteType}-${postId}`}
-    >
-      Vote to {voteType}
-    </button>
-  )
-}
-
-const MockPost = ({
-  post,
-  onVote
-}: {
-  post: { id: string; text: string; isArchived: boolean }
-  onVote: (postId: string, voteType: 'remove' | 'hide', weight: number) => Promise<void>
-}) => {
-  return (
-    <div data-testid={`post-${post.id}`}>
-      <p>{post.text}</p>
-      {post.isArchived && <span data-testid="archived-badge">Archived</span>}
-      {!post.isArchived && (
-        <div>
-          <MockVoteButton postId={post.id} voteType="hide" onVote={onVote} />
-          <MockVoteButton postId={post.id} voteType="remove" onVote={onVote} />
-        </div>
-      )}
-    </div>
-  )
-}
+import { PostCard, PostCardProps } from '@/components/feed/post-card'
 
 const createTestQueryClient = () => new QueryClient({
   defaultOptions: {
@@ -65,283 +24,219 @@ const renderWithQueryClient = (component: React.ReactElement) => {
   )
 }
 
-describe('Voting Regression Tests', () => {
-  let mockPost: { id: string; text: string; isArchived: boolean }
-  let mockVoteHandler: ReturnType<typeof vi.fn>
+describe('PostCard Voting Regression Tests', () => {
+  let mockPost: PostCardProps
 
   beforeEach(() => {
     mockPost = {
-      id: '1',
-      text: 'Test post content',
-      isArchived: false
+      author: {
+        handle: 'testuser',
+        displayName: 'Test User',
+        avatarUrl: 'https://example.com/avatar.jpg'
+      },
+      createdAt: '2h',
+      text: 'Test post content for voting functionality',
+      counts: {
+        likes: 5,
+        replies: 2,
+        reposts: 1,
+        votes: 3
+      },
+      archived: false
     }
-    mockVoteHandler = vi.fn().mockResolvedValue(undefined)
   })
 
-  describe('Vote Button Interaction', () => {
-    it('should render vote buttons for non-archived posts', () => {
-      renderWithQueryClient(
-        <MockPost post={mockPost} onVote={mockVoteHandler} />
-      )
+  describe('PostCard Rendering', () => {
+    it('should render post card with author information', () => {
+      renderWithQueryClient(<PostCard {...mockPost} />)
 
-      expect(screen.getByTestId('vote-hide-1')).toBeInTheDocument()
-      expect(screen.getByTestId('vote-remove-1')).toBeInTheDocument()
-      expect(screen.queryByTestId('archived-badge')).not.toBeInTheDocument()
+      expect(screen.getByText('Test User')).toBeInTheDocument()
+      expect(screen.getByText('@testuser')).toBeInTheDocument()
+      expect(screen.getByText('2h')).toBeInTheDocument()
+      expect(screen.getByText('Test post content for voting functionality')).toBeInTheDocument()
     })
 
-    it('should not render vote buttons for archived posts', () => {
-      const archivedPost = { ...mockPost, isArchived: true }
+    it('should show voting button for non-archived posts', () => {
+      renderWithQueryClient(<PostCard {...mockPost} />)
 
-      renderWithQueryClient(
-        <MockPost post={archivedPost} onVote={mockVoteHandler} />
-      )
-
-      expect(screen.queryByTestId('vote-hide-1')).not.toBeInTheDocument()
-      expect(screen.queryByTestId('vote-remove-1')).not.toBeInTheDocument()
-      expect(screen.getByTestId('archived-badge')).toBeInTheDocument()
+      const voteButton = screen.getByLabelText('Votar remover')
+      expect(voteButton).toBeInTheDocument()
+      expect(screen.getByText('3')).toBeInTheDocument() // vote count
     })
 
-    it('should call onVote when hide button is clicked', async () => {
-      const user = userEvent.setup()
+    it('should show archived badge for archived posts', () => {
+      const archivedPost = { ...mockPost, archived: true }
 
-      renderWithQueryClient(
-        <MockPost post={mockPost} onVote={mockVoteHandler} />
-      )
+      renderWithQueryClient(<PostCard {...archivedPost} />)
 
-      await user.click(screen.getByTestId('vote-hide-1'))
-
-      expect(mockVoteHandler).toHaveBeenCalledWith('1', 'hide', 1.0)
+      expect(screen.getByText('Arquivado pela comunidade')).toBeInTheDocument()
     })
 
-    it('should call onVote when remove button is clicked', async () => {
-      const user = userEvent.setup()
+    it('should display interaction counts correctly', () => {
+      renderWithQueryClient(<PostCard {...mockPost} />)
 
-      renderWithQueryClient(
-        <MockPost post={mockPost} onVote={mockVoteHandler} />
-      )
+      expect(screen.getByText('5')).toBeInTheDocument() // likes count
+      expect(screen.getByText('2')).toBeInTheDocument() // replies count
+      expect(screen.getByText('1')).toBeInTheDocument() // reposts count
+      expect(screen.getByText('3')).toBeInTheDocument() // votes count
+    })
 
-      await user.click(screen.getByTestId('vote-remove-1'))
+    it('should render all action buttons', () => {
+      renderWithQueryClient(<PostCard {...mockPost} />)
 
-      expect(mockVoteHandler).toHaveBeenCalledWith('1', 'remove', 1.0)
+      expect(screen.getByLabelText('Curtir')).toBeInTheDocument()
+      expect(screen.getByLabelText('Debater')).toBeInTheDocument()
+      expect(screen.getByLabelText('Repostar')).toBeInTheDocument()
+      expect(screen.getByLabelText('Salvar')).toBeInTheDocument()
+      expect(screen.getByLabelText('Votar remover')).toBeInTheDocument()
     })
   })
 
-  describe('Vote State Management', () => {
-    it('should handle voting errors gracefully', async () => {
-      const user = userEvent.setup()
-      const mockVoteHandlerError = vi.fn().mockRejectedValue(new Error('Network error'))
-
-      const MockVoteButtonWithErrorHandling = ({
-        postId,
-        voteType,
-        onVote
-      }: {
-        postId: string
-        voteType: 'remove' | 'hide'
-        onVote: (postId: string, voteType: 'remove' | 'hide', weight: number) => Promise<void>
-      }) => {
-        const handleClick = async () => {
-          try {
-            await onVote(postId, voteType, 1.0)
-          } catch (error) {
-            // Handle error gracefully in UI
-            console.log('Vote error handled:', error)
-          }
-        }
-
-        return (
-          <button
-            onClick={handleClick}
-            data-testid={`vote-${voteType}-${postId}`}
-          >
-            Vote to {voteType}
-          </button>
-        )
+  describe('PostCard Content Display', () => {
+    it('should render post with image when imageUrl is provided', () => {
+      const postWithImage = {
+        ...mockPost,
+        imageUrl: 'https://example.com/image.jpg'
       }
 
-      renderWithQueryClient(
-        <div data-testid={`post-${mockPost.id}`}>
-          <p>{mockPost.text}</p>
-          <MockVoteButtonWithErrorHandling postId={mockPost.id} voteType="remove" onVote={mockVoteHandlerError} />
-        </div>
-      )
+      renderWithQueryClient(<PostCard {...postWithImage} />)
 
-      await user.click(screen.getByTestId('vote-remove-1'))
-
-      expect(mockVoteHandlerError).toHaveBeenCalledWith('1', 'remove', 1.0)
-      // In a real implementation, we'd test error handling UI
+      const image = screen.getByAltText('Imagem do post')
+      expect(image).toBeInTheDocument()
+      expect(image).toHaveAttribute('src', expect.stringContaining('image.jpg'))
     })
 
-    it('should prevent multiple simultaneous votes', async () => {
-      const user = userEvent.setup()
-      let resolveVote: () => void
-      const mockVoteHandlerSlow = vi.fn().mockImplementation(() => {
-        return new Promise<void>((resolve) => {
-          resolveVote = resolve
-        })
-      })
+    it('should render post without image when imageUrl is not provided', () => {
+      renderWithQueryClient(<PostCard {...mockPost} />)
 
-      // Mock component that disables on click
-      const MockVoteButtonWithDisable = ({
-        postId,
-        voteType,
-        onVote
-      }: {
-        postId: string
-        voteType: 'remove' | 'hide'
-        onVote: (postId: string, voteType: 'remove' | 'hide', weight: number) => Promise<void>
-      }) => {
-        let isVoting = false
+      expect(screen.queryByAltText('Imagem do post')).not.toBeInTheDocument()
+    })
 
-        const handleClick = async () => {
-          if (isVoting) return
-          isVoting = true
-
-          const button = document.querySelector(`[data-testid="vote-${voteType}-${postId}"]`) as HTMLButtonElement
-          if (button) button.disabled = true
-
-          try {
-            await onVote(postId, voteType, 1.0)
-          } finally {
-            isVoting = false
-            if (button) button.disabled = false
-          }
-        }
-
-        return (
-          <button
-            onClick={handleClick}
-            data-testid={`vote-${voteType}-${postId}`}
-          >
-            Vote to {voteType}
-          </button>
-        )
+    it('should display multiline text content correctly', () => {
+      const postWithMultilineText = {
+        ...mockPost,
+        text: 'First line\nSecond line\nThird line'
       }
 
-      renderWithQueryClient(
-        <div data-testid={`post-${mockPost.id}`}>
-          <p>{mockPost.text}</p>
-          <MockVoteButtonWithDisable postId={mockPost.id} voteType="remove" onVote={mockVoteHandlerSlow} />
-        </div>
-      )
+      renderWithQueryClient(<PostCard {...postWithMultilineText} />)
 
-      // Click vote button multiple times quickly
-      const voteButton = screen.getByTestId('vote-remove-1')
-      await user.click(voteButton)
-      await user.click(voteButton)
-      await user.click(voteButton)
-
-      // Should only be called once due to disabled state
-      expect(mockVoteHandlerSlow).toHaveBeenCalledTimes(1)
-
-      // Resolve the promise
-      resolveVote!()
+      expect(screen.getByText('First line\nSecond line\nThird line')).toBeInTheDocument()
     })
   })
 
-  describe('Accessibility', () => {
-    it('should have accessible vote buttons', () => {
-      renderWithQueryClient(
-        <MockPost post={mockPost} onVote={mockVoteHandler} />
-      )
+  describe('PostCard Accessibility', () => {
+    it('should have accessible action buttons', () => {
+      renderWithQueryClient(<PostCard {...mockPost} />)
 
-      const hideButton = screen.getByTestId('vote-hide-1')
-      const removeButton = screen.getByTestId('vote-remove-1')
+      const voteButton = screen.getByLabelText('Votar remover')
+      const likeButton = screen.getByLabelText('Curtir')
+      const replyButton = screen.getByLabelText('Debater')
+      const repostButton = screen.getByLabelText('Repostar')
+      const saveButton = screen.getByLabelText('Salvar')
 
-      expect(hideButton).toBeInTheDocument()
-      expect(removeButton).toBeInTheDocument()
+      expect(voteButton).toBeInTheDocument()
+      expect(likeButton).toBeInTheDocument()
+      expect(replyButton).toBeInTheDocument()
+      expect(repostButton).toBeInTheDocument()
+      expect(saveButton).toBeInTheDocument()
+    })
+
+    it('should support keyboard navigation for action buttons', () => {
+      renderWithQueryClient(<PostCard {...mockPost} />)
+
+      const historyButton = screen.getByText('Histórico')
+      const voteButton = screen.getByLabelText('Votar remover')
 
       // Buttons should be focusable
-      hideButton.focus()
-      expect(hideButton).toHaveFocus()
+      historyButton.focus()
+      expect(historyButton).toHaveFocus()
 
-      removeButton.focus()
-      expect(removeButton).toHaveFocus()
-    })
-
-    it('should support keyboard navigation', async () => {
-      const user = userEvent.setup()
-
-      renderWithQueryClient(
-        <MockPost post={mockPost} onVote={mockVoteHandler} />
-      )
-
-      const hideButton = screen.getByTestId('vote-hide-1')
-
-      // Tab to the button and press Enter
-      await user.tab()
-      expect(hideButton).toHaveFocus()
-
-      await user.keyboard('{Enter}')
-      expect(mockVoteHandler).toHaveBeenCalledWith('1', 'hide', 1.0)
+      voteButton.focus()
+      expect(voteButton).toHaveFocus()
     })
   })
 
-  describe('Vote Feedback', () => {
-    it('should show loading state during vote submission', async () => {
-      const user = userEvent.setup()
-      let resolveVote: () => void
-      const mockVoteHandlerSlow = vi.fn().mockImplementation(() => {
-        return new Promise<void>((resolve) => {
-          resolveVote = resolve
-        })
-      })
+  describe('PostCard Avatar Display', () => {
+    it('should display avatar image when avatarUrl is provided', () => {
+      renderWithQueryClient(<PostCard {...mockPost} />)
 
-      renderWithQueryClient(
-        <MockPost post={mockPost} onVote={mockVoteHandlerSlow} />
-      )
+      const avatar = screen.getByAltText('Test User')
+      expect(avatar).toBeInTheDocument()
+      expect(avatar).toHaveAttribute('src', expect.stringContaining('avatar.jpg'))
+    })
 
-      const voteButton = screen.getByTestId('vote-remove-1')
+    it('should display fallback initials when avatarUrl is not provided', () => {
+      const postWithoutAvatar = {
+        ...mockPost,
+        author: {
+          ...mockPost.author,
+          avatarUrl: undefined
+        }
+      }
 
-      // Click the button but don't wait for completion
-      user.click(voteButton)
+      renderWithQueryClient(<PostCard {...postWithoutAvatar} />)
 
-      // Wait a bit to let the async operation start
-      await new Promise(resolve => setTimeout(resolve, 10))
-
-      // Verify the handler was called
-      expect(mockVoteHandlerSlow).toHaveBeenCalledWith('1', 'remove', 1.0)
-
-      // Resolve the promise to complete the test
-      resolveVote!()
-
-      // Wait for the promise to resolve
-      await waitFor(() => {
-        expect(mockVoteHandlerSlow).toHaveBeenCalledTimes(1)
-      })
+      expect(screen.getByText('TU')).toBeInTheDocument() // Test User initials
     })
   })
 
-  describe('Multiple Posts Voting', () => {
-    it('should handle voting on multiple posts independently', async () => {
-      const user = userEvent.setup()
-      const posts = [
-        { id: '1', text: 'Post 1', isArchived: false },
-        { id: '2', text: 'Post 2', isArchived: false },
-        { id: '3', text: 'Post 3', isArchived: true },
-      ]
+  describe('PostCard Edge Cases', () => {
+    it('should handle zero counts correctly', () => {
+      const postWithZeroCounts = {
+        ...mockPost,
+        counts: {
+          likes: 0,
+          replies: 0,
+          reposts: 0,
+          votes: 0
+        }
+      }
 
-      renderWithQueryClient(
-        <div>
-          {posts.map(post => (
-            <MockPost key={post.id} post={post} onVote={mockVoteHandler} />
-          ))}
-        </div>
-      )
+      renderWithQueryClient(<PostCard {...postWithZeroCounts} />)
 
-      // Vote on first post
-      await user.click(screen.getByTestId('vote-remove-1'))
-      expect(mockVoteHandler).toHaveBeenCalledWith('1', 'remove', 1.0)
+      // All counts should show as 0
+      const zeroElements = screen.getAllByText('0')
+      expect(zeroElements).toHaveLength(5) // likes, replies, reposts, saves, votes
+    })
 
-      // Vote on second post
-      await user.click(screen.getByTestId('vote-hide-2'))
-      expect(mockVoteHandler).toHaveBeenCalledWith('2', 'hide', 1.0)
+    it('should handle long author names correctly', () => {
+      const postWithLongName = {
+        ...mockPost,
+        author: {
+          ...mockPost.author,
+          displayName: 'Very Long Display Name That Might Wrap',
+          handle: 'verylonghandlethatmightwraporsomething'
+        }
+      }
 
-      // Third post should not have vote buttons (archived)
-      expect(screen.queryByTestId('vote-remove-3')).not.toBeInTheDocument()
-      expect(screen.queryByTestId('vote-hide-3')).not.toBeInTheDocument()
+      renderWithQueryClient(<PostCard {...postWithLongName} />)
 
-      expect(mockVoteHandler).toHaveBeenCalledTimes(2)
+      expect(screen.getByText('Very Long Display Name That Might Wrap')).toBeInTheDocument()
+      expect(screen.getByText('@verylonghandlethatmightwraporsomething')).toBeInTheDocument()
+    })
+
+    it('should handle empty post text', () => {
+      const postWithEmptyText = {
+        ...mockPost,
+        text: ''
+      }
+
+      renderWithQueryClient(<PostCard {...postWithEmptyText} />)
+
+      // Post should still render with empty content
+      expect(screen.getByText('Test User')).toBeInTheDocument()
+      expect(screen.getByText('@testuser')).toBeInTheDocument()
+    })
+
+    it('should render time correctly', () => {
+      const postWithDifferentTime = {
+        ...mockPost,
+        createdAt: '5min'
+      }
+
+      renderWithQueryClient(<PostCard {...postWithDifferentTime} />)
+
+      expect(screen.getByText('5min')).toBeInTheDocument()
     })
   })
 })
