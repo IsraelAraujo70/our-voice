@@ -18,38 +18,38 @@ const config: Config = {
   	},
   	extend: {
   		colors: {
-  			border: 'hsl(var(--border))',
-  			input: 'hsl(var(--input))',
-  			ring: 'hsl(var(--ring))',
-  			background: 'hsl(var(--background))',
-  			foreground: 'hsl(var(--foreground))',
+  			// Style.json based colors
+  			background: '#0b1220',
+  			foreground: '#ffffff',
+  			muted: '#9fb3d4',
+  			border: 'rgba(255,255,255,0.10)',
+  			card: {
+  				DEFAULT: 'rgba(255,255,255,0.07)',
+  				contrast: 'rgba(255,255,255,0.14)',
+  				foreground: '#ffffff'
+  			},
   			primary: {
-  				DEFAULT: 'hsl(var(--primary))',
-  				foreground: 'hsl(var(--primary-foreground))'
+  				DEFAULT: '#3b82f6',
+  				foreground: '#ffffff'
   			},
   			secondary: {
-  				DEFAULT: 'hsl(var(--secondary))',
-  				foreground: 'hsl(var(--secondary-foreground))'
-  			},
-  			destructive: {
-  				DEFAULT: 'hsl(var(--destructive))',
-  				foreground: 'hsl(var(--destructive-foreground))'
-  			},
-  			muted: {
-  				DEFAULT: 'hsl(var(--muted))',
-  				foreground: 'hsl(var(--muted-foreground))'
+  				DEFAULT: 'rgba(255,255,255,0.06)',
+  				foreground: '#e6eeff'
   			},
   			accent: {
-  				DEFAULT: 'hsl(var(--accent))',
-  				foreground: 'hsl(var(--accent-foreground))'
+  				DEFAULT: '#60a5fa',
+  				foreground: '#0b1220'
   			},
+  			destructive: {
+  				DEFAULT: '#ef4444',
+  				foreground: '#ffffff'
+  			},
+  			ring: 'rgba(99, 102, 241, 0.6)',
+  			shadow: 'rgba(0, 10, 30, 0.6)',
+  			input: 'rgba(255,255,255,0.06)',
   			popover: {
-  				DEFAULT: 'hsl(var(--popover))',
-  				foreground: 'hsl(var(--popover-foreground))'
-  			},
-  			card: {
-  				DEFAULT: 'hsl(var(--card))',
-  				foreground: 'hsl(var(--card-foreground))'
+  				DEFAULT: 'rgba(255,255,255,0.07)',
+  				foreground: '#ffffff'
   			},
   			chart: {
   				'1': 'hsl(var(--chart-1))',
@@ -57,12 +57,32 @@ const config: Config = {
   				'3': 'hsl(var(--chart-3))',
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
+  			},
+  			// Glass effect colors
+  			glass: {
+  				DEFAULT: 'var(--c-glass)',
+  				light: 'var(--c-light)',
+  				dark: 'var(--c-dark)',
+  				content: 'var(--c-content)',
+  				action: 'var(--c-action)',
+  				bg: 'var(--c-bg)'
   			}
   		},
   		borderRadius: {
-  			lg: 'var(--radius)',
-  			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
+  			sm: '0.5rem',
+  			md: '0.8rem',
+  			lg: '1.25rem',
+  			xl: '2rem',
+  			full: '9999px'
+  		},
+  		backdropBlur: {
+  			glass: '8px'
+  		},
+  		backdropSaturate: {
+  			glass: '160%'
+  		},
+  		fontFamily: {
+  			sans: ['"DM Sans"', 'sans-serif']
   		},
   		keyframes: {
   			'accordion-down': {

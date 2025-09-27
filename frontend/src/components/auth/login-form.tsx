@@ -4,7 +4,6 @@ import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AuthService } from "@/lib/auth-service";
 import { useAuthStore } from "@/stores/auth-store";
@@ -54,15 +53,15 @@ export function LoginForm({ onSuccess, onSwitchToSignup }: LoginFormProps) {
   }, [error, fieldErrors, clearError, clearFieldError]);
 
   return (
-    <Card className="w-full border-0 shadow-none">
-      <CardHeader className="px-0 pt-0">
-        <CardDescription>
+    <div className="w-full">
+      <div className="pb-4">
+        <p className="text-sm" style={{ color: 'color-mix(in srgb, var(--c-content) 80%, transparent)' }}>
           Enter your email and password to access your account
-        </CardDescription>
-      </CardHeader>
+        </p>
+      </div>
 
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-4">
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
@@ -102,9 +101,9 @@ export function LoginForm({ onSuccess, onSwitchToSignup }: LoginFormProps) {
               <p className="text-sm text-red-500">{fieldErrors.password}</p>
             )}
           </div>
-        </CardContent>
+        </div>
 
-        <CardFooter className="flex flex-col space-y-4">
+        <div className="flex flex-col space-y-4">
           <Button
             type="submit"
             className="w-full"
@@ -124,8 +123,8 @@ export function LoginForm({ onSuccess, onSwitchToSignup }: LoginFormProps) {
               Don't have an account? Sign up
             </Button>
           )}
-        </CardFooter>
+        </div>
       </form>
-    </Card>
+    </div>
   );
 }

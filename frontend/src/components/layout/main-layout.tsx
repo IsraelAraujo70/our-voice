@@ -3,6 +3,7 @@
 import { useAuth } from "@/hooks/use-auth";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { Button } from "@/components/ui/button";
+import { ClientOnly } from "@/components/ui/client-only";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -15,48 +16,57 @@ export function MainLayout({ children }: MainLayoutProps) {
     await logout();
   };
 
-  const userRole = getRole();
-  const isAuth = isAuthenticated();
-
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-4 py-3">
-        <div className="container mx-auto flex items-center justify-between">
+      <div className="container mx-auto px-4 py-6">
+        <header className="glass-card px-4 py-3 mb-6">
+          <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold text-gray-900">OUR Voice</h1>
-            {isAuth && (
-              <span className="text-sm text-gray-500">
-                Welcome, @{user?.handle}
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center space-x-4">
-            {isAuth ? (
-              <>
-                <span className="text-xs px-2 py-1 bg-gray-100 rounded-full">
-                  {userRole}
+            <h1 className="text-2xl font-bold" style={{ color: 'var(--c-content)' }}>OUR Voice</h1>
+            <ClientOnly>
+              {isAuthenticated() && (
+                <span className="text-sm" style={{ color: 'color-mix(in srgb, var(--c-content) 70%, transparent)' }}>
+                  Welcome, @{user?.handle}
                 </span>
-                <Button variant="outline" size="sm" onClick={handleLogout}>
-                  Logout
-                </Button>
-              </>
-            ) : (
-              <AuthModal>
-                <Button variant="outline" size="sm">
-                  Login
-                </Button>
-              </AuthModal>
-            )}
+              )}
+            </ClientOnly>
           </div>
-        </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-6">
-        {children}
-      </main>
+          <div className="flex items-center space-x-4">
+            <ClientOnly
+              fallback={
+                <Button variant="secondary" size="sm" disabled>
+                  Loading...
+                </Button>
+              }
+            >
+              {isAuthenticated() ? (
+                <>
+                  <span className="text-xs px-3 py-1.5 glass-button-secondary rounded-full">
+                    {getRole()}
+                  </span>
+                  <Button variant="ghost" size="sm" onClick={handleLogout}>
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <AuthModal>
+                  <Button variant="secondary" size="sm">
+                    Login
+                  </Button>
+                </AuthModal>
+              )}
+            </ClientOnly>
+          </div>
+          </div>
+        </header>
+
+        {/* Main Content */}
+        <main>
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
