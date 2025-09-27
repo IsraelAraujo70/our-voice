@@ -11,6 +11,7 @@ dependencies = [
   "Django>=5.2,<6.0",
   "djangorestframework>=3.16",
   "django-filter>=25.1",
+  "django-cors-headers>=4.3",
   "channels>=4.3",
   "daphne>=4.2",
   "channels-redis>=4.3",
