@@ -112,12 +112,14 @@ export function validateLogin(data: unknown): ValidationResult {
   } catch (error) {
     if (error instanceof z.ZodError) {
       const errors: Record<string, string> = {};
-      error.errors.forEach((err) => {
-        if (err.path.length > 0) {
-          const field = String(err.path[0]);
-          errors[field] = err.message;
-        }
-      });
+      if (error.issues && Array.isArray(error.issues)) {
+        error.issues.forEach((issue) => {
+          if (issue.path && issue.path.length > 0) {
+            const field = String(issue.path[0]);
+            errors[field] = issue.message;
+          }
+        });
+      }
       return { success: false, errors };
     }
     return {
@@ -135,12 +137,14 @@ export function validateSignup(data: unknown): ValidationResult {
   } catch (error) {
     if (error instanceof z.ZodError) {
       const errors: Record<string, string> = {};
-      error.errors.forEach((err) => {
-        if (err.path.length > 0) {
-          const field = String(err.path[0]);
-          errors[field] = err.message;
-        }
-      });
+      if (error.issues && Array.isArray(error.issues)) {
+        error.issues.forEach((issue) => {
+          if (issue.path && issue.path.length > 0) {
+            const field = String(issue.path[0]);
+            errors[field] = issue.message;
+          }
+        });
+      }
       return { success: false, errors };
     }
     return {

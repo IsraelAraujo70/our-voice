@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { LoginForm } from "./login-form";
 import { SignupForm } from "./signup-form";
@@ -33,6 +33,11 @@ export function AuthModal({ children }: AuthModalProps) {
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>
+            {isSignup ? "Join OUR Voice" : "Welcome back"}
+          </DialogTitle>
+        </DialogHeader>
         {isSignup ? (
           <SignupForm
             onSuccess={handleSuccess}

@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AuthService } from "@/lib/auth-service";
 import { useAuthStore } from "@/stores/auth-store";
@@ -56,9 +56,8 @@ export function SignupForm({ onSuccess, onSwitchToLogin }: SignupFormProps) {
   }, [error, fieldErrors, clearError, clearFieldError]);
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle>Sign Up</CardTitle>
+    <Card className="w-full border-0 shadow-none">
+      <CardHeader className="px-0 pt-0">
         <CardDescription>
           Create your OUR Voice account
         </CardDescription>
