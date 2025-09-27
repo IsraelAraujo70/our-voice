@@ -40,6 +40,18 @@ class UserViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save()
 
+    @action(detail=False, methods=["get"])
+    def me(self, request):
+        """Get current user profile."""
+        if not request.user.is_authenticated:
+            return Response(
+                {"detail": "Authentication required."},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
+
     @action(detail=True, methods=["post"])
     def make_staff(self, request, handle=None):
         """Make a user staff (can access admin interface)."""

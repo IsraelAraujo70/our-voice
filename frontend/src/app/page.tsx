@@ -1,16 +1,19 @@
 'use client';
 
+import { MainLayout } from "@/components/layout/main-layout";
+
 export default function Home() {
-
   return (
-    <div className="min-h-screen">
-      <header className="border-b p-4">
-        <h1 className="text-2xl font-bold">OUR Voice</h1>
-      </header>
+    <MainLayout>
+      <div className="space-y-6">
+        <h2 className="text-2xl font-semibold text-gray-900">Feed Principal</h2>
 
-      <main className="p-4">
-        <h2 className="text-xl font-semibold mb-4">Feed Principal</h2>
-      </main>
-    </div>
+        <div className="bg-white rounded-lg shadow p-6">
+          <p className="text-gray-600">
+            Bem-vindo ao OUR Voice! Este é o layout principal da aplicação SPA.
+          </p>
+        </div>
+      </div>
+    </MainLayout>
   );
 }
