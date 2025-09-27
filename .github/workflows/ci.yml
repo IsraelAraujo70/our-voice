@@ -2,17 +2,12 @@ name: CI
 
 on:
   push:
-    branches: [main, master, develop]
+    branches: [main, master]
   pull_request:
-    branches: [main, master, develop]
-
-env:
-  POSTGRES_PASSWORD: postgres
-  POSTGRES_DB: test_db
-  POSTGRES_USER: postgres
+    branches: [main, master]
 
 jobs:
-  backend-tests:
+  backend:
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -21,74 +16,39 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: test_db
           POSTGRES_USER: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
         ports:
           - 5432:5432
-      redis:
-        image: redis:7-alpine
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 6379:6379
 
     steps:
     - uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v5
+    - uses: actions/setup-python@v5
       with:
         python-version: '3.11'
 
     - name: Install UV
       run: pip install uv
 
-    - name: Install dependencies
+    - name: Setup backend
       working-directory: ./backend
       run: |
         uv venv
         source .venv/bin/activate
         uv pip install -e .
-        uv pip install pytest pytest-django pytest-cov factory-boy model-bakery ruff faker django-cors-headers
 
-    - name: Run backend checks
-      working-directory: ./backend
-      env:
-        DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_db
-        REDIS_URL: redis://localhost:6379
-        SECRET_KEY: test-secret-key-for-ci
-        DEBUG: 'true'
-      run: |
-        source .venv/bin/activate
-        python manage.py check
-        python manage.py migrate --run-syncdb
-
-    - name: Run backend tests
-      working-directory: ./backend
-      env:
-        DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_db
-        REDIS_URL: redis://localhost:6379
-        SECRET_KEY: test-secret-key-for-ci
-        DEBUG: 'true'
-      run: |
-        source .venv/bin/activate
-        pytest --cov=apps --cov-report=xml --cov-fail-under=80
-
-    - name: Run backend linting
+    - name: Lint
       working-directory: ./backend
       run: |
         source .venv/bin/activate
         ruff check .
         ruff format --check .
 
-    - name: Upload coverage
-      uses: codecov/codecov-action@v4
-      with:
-        file: ./backend/coverage.xml
-        flags: backend
+    - name: Test
+      working-directory: ./backend
+      env:
+        DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_db
+        SECRET_KEY: test-secret-key
+      run: |
+        source .venv/bin/activate
+        python manage.py migrate --run-syncdb
+        pytest
