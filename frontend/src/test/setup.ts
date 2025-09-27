@@ -1,7 +1,8 @@
 import '@testing-library/jest-dom'
-import { expect, afterEach } from 'vitest'
+import { expect, afterEach, vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
 import * as matchers from '@testing-library/jest-dom/matchers'
+import React from 'react'
 
 // Extend Vitest's expect with jest-dom matchers
 expect.extend(matchers)
@@ -33,8 +34,8 @@ vi.mock('next/navigation', () => ({
 
 // Mock Next.js image
 vi.mock('next/image', () => ({
-  default: (props: any) => {
-    return <img {...props} />
+  default: (props: Record<string, unknown>) => {
+    return React.createElement('img', props)
   },
 }))
 

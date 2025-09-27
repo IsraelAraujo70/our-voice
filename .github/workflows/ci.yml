@@ -54,7 +54,8 @@ jobs:
       run: |
         uv venv
         source .venv/bin/activate
-        uv pip install -e ".[dev]"
+        uv pip install -e .
+        uv pip install pytest pytest-django pytest-cov factory-boy model-bakery ruff faker
 
     - name: Run backend checks
       working-directory: ./backend

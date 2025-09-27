@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "our-voice-backend"
 version = "0.1.0"
@@ -17,6 +21,11 @@ dependencies = [
   "whitenoise>=6.6",
   "Pillow>=11.0",
 ]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["apps*", "config*"]
+exclude = ["tests*", "static*", "templates*"]
 
 [project.optional-dependencies]
 dev = [

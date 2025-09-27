@@ -3,9 +3,10 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor, fireEvent } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import React from 'react'
 
 // Mock components - these would be actual components in the real implementation
 const MockVoteButton = ({ postId, voteType, onVote }: {
@@ -308,20 +309,13 @@ describe('Voting Regression Tests', () => {
   })
 })
 
-// Mock React import for the test file
-declare global {
-  namespace React {
-    const useState: <T>(initial: T) => [T, (value: T) => void]
-  }
-}
-
-// Mock React for the loading state test
-const React = {
-  useState: vi.fn().mockImplementation((initial) => {
+// Override React.useState for the test
+Object.defineProperty(React, 'useState', {
+  value: vi.fn().mockImplementation((initial: unknown) => {
     let state = initial
-    const setState = (newState: any) => {
+    const setState = (newState: unknown) => {
       state = newState
     }
     return [state, setState]
   })
-}
+})
