@@ -114,13 +114,7 @@ jobs:
 
     - name: Run frontend tests
       working-directory: ./frontend
-      run: bun run test:coverage
-
-    - name: Upload coverage
-      uses: codecov/codecov-action@v4
-      with:
-        file: ./frontend/coverage/coverage-final.json
-        flags: frontend
+      run: bun run test
 
   e2e-tests:
     runs-on: ubuntu-latest

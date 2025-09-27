@@ -40,7 +40,7 @@ dev = [
 ]
 
 [tool.ruff]
-select = ["E", "F", "I", "UP", "DJANGO"]
+select = ["E", "F", "I", "UP"]
 line-length = 100
 
 [tool.pytest.ini_options]
