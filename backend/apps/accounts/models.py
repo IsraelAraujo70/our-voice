@@ -69,6 +69,13 @@ class User(AbstractUser):
     created_at = models.DateTimeField(default=timezone.now, editable=False)
     is_deleted = models.BooleanField(default=False)
     deleted_at = models.DateTimeField(blank=True, null=True)
+    following = models.ManyToManyField(
+        "self",
+        through="UserFollow",
+        symmetrical=False,
+        related_name="followers",
+        blank=True,
+    )
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["handle"]
@@ -112,3 +119,26 @@ def create_user_profile(sender, instance: User, created: bool, **_):
 
     if created:
         Profile.objects.get_or_create(user=instance)
+
+
+class UserFollow(models.Model):
+    """Directional follow relationship between users."""
+
+    follower = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="following_relations",
+    )
+    followed = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="follower_relations",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("follower", "followed")
+        ordering = ("-created_at",)
+
+    def __str__(self) -> str:  # pragma: no cover - simple representation
+        return f"@{self.follower.handle} → @{self.followed.handle}"

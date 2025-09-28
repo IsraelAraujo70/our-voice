@@ -1,6 +1,6 @@
 """Viewsets for posts and timelines."""
 
-from rest_framework import permissions, viewsets
+from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -26,9 +26,30 @@ class PostViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"], permission_classes=[permissions.AllowAny])
     def feed(self, request):
-        """Return a simple chronological feed for bootstraping the frontend."""
+        """Return a feed tailored to the requested scope."""
 
-        queryset = self.get_queryset()[:50]
+        scope = request.query_params.get("scope", "for_you").lower()
+
+        queryset = (
+            self.get_queryset()
+            .filter(is_archived=False, deleted_at__isnull=True)
+            .order_by("-created_at")
+        )
+
+        if scope == "following":
+            if not request.user.is_authenticated:
+                return Response(
+                    {"detail": "Authentication required for following feed."},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
+
+            following_ids = list(request.user.following.values_list("id", flat=True))
+            following_ids.append(request.user.id)
+            queryset = queryset.filter(author_id__in=following_ids)
+        else:
+            queryset = queryset.filter(visibility="public")
+
+        queryset = queryset[:50]
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)

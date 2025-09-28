@@ -26,6 +26,25 @@ export function resolveMediaUrl(path?: string | null): string | undefined {
   return base ? `${base}${normalizedPath}` : normalizedPath;
 }
 
+export function buildWebSocketUrl(
+  path: string,
+  params: Record<string, string | undefined | null> = {}
+): string {
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const originUrl = new URL(API_BASE_ORIGIN);
+  originUrl.protocol = originUrl.protocol === "https:" ? "wss:" : "ws:";
+  originUrl.pathname = normalizedPath;
+  originUrl.search = "";
+  originUrl.hash = "";
+  const url = new URL(originUrl);
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      url.searchParams.set(key, value);
+    }
+  });
+  return url.toString();
+}
+
 export async function apiFetch<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
   // Get token from auth store if available
   let authToken: string | null = null;

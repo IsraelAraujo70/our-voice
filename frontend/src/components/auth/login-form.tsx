@@ -120,7 +120,7 @@ export function LoginForm({ onSuccess, onSwitchToSignup }: LoginFormProps) {
               onClick={onSwitchToSignup}
               disabled={isLoading}
             >
-              Don't have an account? Sign up
+              Don&apos;t have an account? Sign up
             </Button>
           )}
         </div>

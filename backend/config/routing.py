@@ -3,8 +3,10 @@
 from channels.routing import URLRouter
 from django.urls import path
 
+from apps.posts.consumers import FeedConsumer
+
 websocket_urlpatterns = [
-    # Example placeholder; real consumers should be added here.
+    path("ws/posts/feed/", FeedConsumer.as_asgi()),
 ]
 
 application = URLRouter(websocket_urlpatterns)

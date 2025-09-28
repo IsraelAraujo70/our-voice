@@ -1,7 +1,10 @@
 """Tests for post views and API endpoints."""
 
 import pytest
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.contrib.auth import get_user_model
+from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -321,6 +324,62 @@ class TestPostFeedEndpoint:
         assert posts[0]["id"] == post2.id  # Newer post first
         assert posts[1]["id"] == post1.id
 
+    def test_feed_excludes_followers_only_posts(self):
+        """Public feed should not include followers-only posts."""
+        public_post = PostFactory()
+        PostFactory(visibility="followers")
+
+        client = APIClient()
+        response = client.get("/api/posts/feed/")
+
+        assert response.status_code == status.HTTP_200_OK
+        ids = [post["id"] for post in response.data["results"]]
+        assert public_post.id in ids
+        assert len(ids) == 1
+
+    def test_following_feed_requires_authentication(self):
+        """Anonymous users cannot access the following feed."""
+        client = APIClient()
+        response = client.get("/api/posts/feed/?scope=following")
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.data["detail"] == "Authentication required for following feed."
+
+    def test_following_feed_returns_followed_posts(self):
+        """Following feed returns posts from followed users including follower-only visibility."""
+        follower = UserFactory()
+        followed = UserFactory()
+        other_user = UserFactory()
+
+        follower.following.add(followed)
+
+        post_followed_public = PostFactory(author=followed, text="followed public")
+        post_followed_private = PostFactory(author=followed, visibility="followers", text="followed private")
+        PostFactory(author=other_user, text="other user")
+
+        client = APIClient()
+        client.force_authenticate(user=follower)
+        response = client.get("/api/posts/feed/?scope=following")
+
+        assert response.status_code == status.HTTP_200_OK
+        ids = [post["id"] for post in response.data["results"]]
+        assert post_followed_public.id in ids
+        assert post_followed_private.id in ids
+        assert set(ids) == {post_followed_public.id, post_followed_private.id}
+
+    def test_following_feed_includes_self_authored_posts(self):
+        """Following feed should include posts created by the authenticated user."""
+        follower = UserFactory()
+        own_post = PostFactory(author=follower)
+
+        client = APIClient()
+        client.force_authenticate(user=follower)
+        response = client.get("/api/posts/feed/?scope=following")
+
+        assert response.status_code == status.HTTP_200_OK
+        ids = [post["id"] for post in response.data["results"]]
+        assert own_post.id in ids
+
 
 @pytest.mark.django_db
 class TestPostPermissions:
@@ -372,3 +431,48 @@ class TestPostPermissions:
 
         response = client.delete(f"/api/posts/{post.id}/")
         assert response.status_code == status.HTTP_403_FORBIDDEN
+
+@pytest.mark.django_db
+class TestFeedBroadcastSignals:
+    """Ensure post creation triggers websocket broadcast events."""
+
+    def test_public_post_broadcasts_to_public_group(self):
+        with override_settings(
+            CHANNEL_LAYERS={
+                "default": {
+                    "BACKEND": "channels.layers.InMemoryChannelLayer",
+                }
+            }
+        ):
+            channel_layer = get_channel_layer()
+            channel_name = "test_public_channel"
+            async_to_sync(channel_layer.group_add)("feed_for_you", channel_name)
+
+            post = PostFactory()
+
+            message = async_to_sync(channel_layer.receive)(channel_name)
+            assert message["event"] == "post.created"
+            assert message["payload"]["id"] == post.id
+
+    def test_followers_only_post_broadcasts_to_followers(self):
+        follower = UserFactory()
+        followed = UserFactory()
+        follower.following.add(followed)
+
+        with override_settings(
+            CHANNEL_LAYERS={
+                "default": {
+                    "BACKEND": "channels.layers.InMemoryChannelLayer",
+                }
+            }
+        ):
+            channel_layer = get_channel_layer()
+            channel_name = f"test_following_{follower.pk}"
+            group_name = f"feed_following_{follower.pk}"
+            async_to_sync(channel_layer.group_add)(group_name, channel_name)
+
+            post = PostFactory(author=followed, visibility="followers")
+
+            message = async_to_sync(channel_layer.receive)(channel_name)
+            assert message["event"] == "post.created"
+            assert message["payload"]["id"] == post.id

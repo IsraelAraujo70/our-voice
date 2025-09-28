@@ -1,32 +1,31 @@
 'use client';
 
 import { MainLayout } from "@/components/layout/main-layout";
+import { FeedScopeSwitcher } from "@/components/feed/feed-scope-switcher";
+import { RealtimeFeed } from "@/components/feed/realtime-feed";
 import { GlassCard } from "@/components/ui/glass-card";
 
 export default function Home() {
   return (
     <MainLayout>
       <div className="space-y-6">
-        <h2 className="text-2xl font-semibold" style={{ color: 'var(--c-content)' }}>Feed Principal</h2>
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+          <section className="space-y-6">
+            <FeedScopeSwitcher />
+            <RealtimeFeed />
+          </section>
 
-        <GlassCard>
-          <p style={{ color: 'var(--c-content)' }} className="mb-4">
-            Bem-vindo ao OUR Voice! Este é o layout principal da aplicação SPA com tema glassmorphism.
-          </p>
-        </GlassCard>
-
-        <GlassCard>
-          <h3 className="text-lg font-semibold mb-3" style={{ color: 'var(--c-content)' }}>Exemplo de Post</h3>
-          <p style={{ color: 'color-mix(in srgb, var(--c-content) 80%, transparent)' }} className="mb-4">
-            Este é um exemplo de como os posts aparecerão com o novo design glassmorphism.
-            O efeito de vidro líquido cria uma sensação moderna e elegante.
-          </p>
-          <div className="flex gap-3">
-            <button className="glass-button-primary">Like</button>
-            <button className="glass-button-secondary">Reply</button>
-            <button className="glass-button-ghost">Share</button>
-          </div>
-        </GlassCard>
+          <aside className="hidden lg:flex">
+            <GlassCard className="h-fit w-full p-6 space-y-4">
+              <h3 className="text-lg font-semibold" style={{ color: 'var(--c-content)' }}>
+                Descubra novas conexões
+              </h3>
+              <p className="text-sm" style={{ color: 'color-mix(in srgb, var(--c-content) 70%, transparent)' }}>
+                Em breve você verá sugestões personalizadas de pessoas e debates para seguir.
+              </p>
+            </GlassCard>
+          </aside>
+        </div>
       </div>
     </MainLayout>
   );
